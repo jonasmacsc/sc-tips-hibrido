@@ -27,6 +27,7 @@
       </div>
     </div>
 
+    <!-- Bloco Roleta -->
     <div class="row">
       <div class="card" style="flex:1">
         <h3>🎲 Roleta — Live</h3>
@@ -42,6 +43,7 @@
         </div>
       </div>
 
+      <!-- Bloco Odds -->
       <div class="card" style="flex:1">
         <h3>⚽ Futebol — Odds (The Odds API)</h3>
         <div class="row" style="margin-bottom:8px">
@@ -53,4 +55,50 @@
           <button class="btn primary" id="btnOdds">Carregar Odds</button>
         </div>
         <table class="table" id="oddsTable">
-          <
+          <thead><tr><th>Jogo</th><th>Casa</th><th>Empate</th><th>Fora</th><th>Atualizado</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estratégias + Logs -->
+    <div class="row" style="margin-top:12px">
+      <div class="card" style="flex:1">
+        <h3>🎯 Estratégia — Elite 2X</h3>
+        <div id="strat-elite2x" class="kpi">
+          <div class="item"><div class="t">Ativa</div><div class="v" data-f="active">OFF</div></div>
+          <div class="item"><div class="t">TTL Spins</div><div class="v" data-f="ttl">0</div></div>
+          <div class="item"><div class="t">Greens</div><div class="v" data-f="greens">0</div></div>
+          <div class="item"><div class="t">Reds</div><div class="v" data-f="reds">0</div></div>
+          <div class="item"><div class="t">Último</div><div class="v" data-f="last">-</div></div>
+        </div>
+        <div style="margin-top:10px">
+          <strong>Números (base + proteção)</strong>
+          <div class="badge" style="margin-top:6px" data-f="nums">2, 12, 22, 32, 0</div>
+          <div class="muted" style="margin-top:6px">Gatilho: sair número com terminal 4 ou 5. Janela de 3 giros.</div>
+        </div>
+      </div>
+
+      <div class="card" style="flex:1">
+        <h3>📜 Logs</h3>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sons -->
+  <audio id="sndGreen" src="assets/sounds/green.mp3" preload="auto"></audio>
+  <audio id="sndRed" src="assets/sounds/red.mp3" preload="auto"></audio>
+  <audio id="sndAlert" src="assets/sounds/alert.mp3" preload="auto"></audio>
+  <audio id="sndClick" src="assets/sounds/click.mp3" preload="auto"></audio>
+
+  <!-- Scripts -->
+  <script src="js/env.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/telegram.js"></script>
+  <script src="js/roulette.js"></script>
+  <script src="js/odds.js"></script>
+  <script src="js/strategies.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
