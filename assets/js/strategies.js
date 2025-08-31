@@ -1,42 +1,85 @@
-<!-- Estratégias + Logs -->
-<div class="row" style="margin-top:12px">
-  <!-- Elite 2X -->
-  <div class="card" style="flex:1">
-    <h3>🎯 Estratégia — Elite 2X</h3>
-    <div id="strat-elite2x" class="kpi">
-      <div class="item"><div class="t">Ativa</div><div class="v" data-f="active">OFF</div></div>
-      <div class="item"><div class="t">TTL Spins</div><div class="v" data-f="ttl">0</div></div>
-      <div class="item"><div class="t">Greens</div><div class="v" data-f="greens">0</div></div>
-      <div class="item"><div class="t">Reds</div><div class="v" data-f="reds">0</div></div>
-      <div class="item"><div class="t">Último</div><div class="v" data-f="last">-</div></div>
-    </div>
-    <div style="margin-top:10px">
-      <strong>Números (base + proteção)</strong>
-      <div class="badge" style="margin-top:6px" data-f="nums">2, 12, 22, 32, 0</div>
-      <div class="muted" style="margin-top:6px">Gatilho: número com terminal 4 ou 5. Janela de 3 giros.</div>
-    </div>
-  </div>
+// === Estratégias — Elite 2X + Quarta Dimensão ===
+// Mostrar apenas números base (+ proteção 0). Vizinhos implícitos no Race.
+// Ambas com janela padrão de 3 giros após gatilho.
 
-  <!-- Quarta Dimensão -->
-  <div class="card" style="flex:1">
-    <h3>🎯 Estratégia — Quarta Dimensão</h3>
-    <div id="strat-quarta" class="kpi">
-      <div class="item"><div class="t">Ativa</div><div class="v" data-f="active">OFF</div></div>
-      <div class="item"><div class="t">TTL Spins</div><div class="v" data-f="ttl">0</div></div>
-      <div class="item"><div class="t">Greens</div><div class="v" data-f="greens">0</div></div>
-      <div class="item"><div class="t">Reds</div><div class="v" data-f="reds">0</div></div>
-      <div class="item"><div class="t">Último</div><div class="v" data-f="last">-</div></div>
-    </div>
-    <div style="margin-top:10px">
-      <strong>Números (base + proteção)</strong>
-      <div class="badge" style="margin-top:6px" data-f="nums">4, 14, 24, 34, 0</div>
-      <div class="muted" style="margin-top:6px">Gatilho: número com terminal 1 ou 3. Janela de 3 giros.</div>
-    </div>
-  </div>
+(function(){
+  const { log, play } = window.SC_UTILS;
 
-  <!-- Logs -->
-  <div class="card" style="flex:1">
-    <h3>📜 Logs</h3>
-    <div class="log" id="log"></div>
-  </div>
-</div>
+  function makeTerminalStrategy(opts){
+    const { id, label, base, prot, triggerTerminals, uiRootId, windowSpins=3 } = opts;
+    const state = { active:false, ttlSpins:0, greens:0, reds:0, lastOutcome:'-' };
+
+    const terminal = (n) => (typeof n==='number') ? (n % 10) : null;
+    const hit = (n) => base.includes(n) || prot.includes(n);
+
+    function uiRender(){
+      const box = document.getElementById(uiRootId); if(!box) return;
+      box.querySelector('[data-f=active]').textContent = state.active ? 'ON' : 'OFF';
+      box.querySelector('[data-f=ttl]').textContent = String(state.ttlSpins);
+      box.querySelector('[data-f=greens]').textContent = String(state.greens);
+      box.querySelector('[data-f=reds]').textContent = String(state.reds);
+      box.querySelector('[data-f=last]').textContent = state.lastOutcome;
+      box.querySelector('[data-f=nums]').textContent = [...base, ...prot].join(', ');
+    }
+    function resetWindow(){ state.active=false; state.ttlSpins=0; state.lastOutcome='-'; uiRender(); }
+
+    function onSpin(number){
+      // 1) Gatilho por terminais
+      const t = terminal(number);
+      if (triggerTerminals.includes(t)){
+        state.active = true;
+        state.ttlSpins = windowSpins;
+        play('sndAlert');
+        log(`[${label}] Gatilho por terminal ${t} — janela ${state.ttlSpins}`);
+      }
+
+      // 2) Avaliação enquanto ativo
+      if (state.active){
+        if (hit(number)){
+          state.greens++; state.lastOutcome='GREEN'; play('sndGreen');
+          log(`[${label}] GREEN no número ${number}`);
+          resetWindow(); // take imediato
+        } else {
+          state.ttlSpins--;
+          if (state.ttlSpins <= 0){
+            state.reds++; state.lastOutcome='RED'; play('sndRed');
+            log(`[${label}] RED — encerrou janela sem acerto`);
+            resetWindow();
+          } else {
+            log(`[${label}] Aguardando... TTL: ${state.ttlSpins}`);
+          }
+        }
+      }
+      uiRender();
+    }
+
+    function getSuggestion(){ return state.active ? { label, numbers: base, protection: prot } : null; }
+
+    return { id, label, onSpin, getSuggestion, getState: () => ({...state}) };
+  }
+
+  // === Elite 2X === (gatilho: terminais 4/5; base 2,12,22,32; prot 0)
+  const elite2x = makeTerminalStrategy({
+    id:'elite2x',
+    label:'Elite 2X',
+    base:[2,12,22,32],
+    prot:[0],
+    triggerTerminals:[4,5],
+    uiRootId:'strat-elite2x',
+    windowSpins:3
+  });
+
+  // === Quarta Dimensão === (gatilho: terminais 1/3; base 4,14,24,34; prot 0)
+  const quarta = makeTerminalStrategy({
+    id:'quarta',
+    label:'Quarta Dimensão',
+    base:[4,14,24,34],
+    prot:[0],
+    triggerTerminals:[1,3],
+    uiRootId:'strat-quarta',
+    windowSpins:3
+  });
+
+  // Expor
+  window.SC_STRATS = { elite2x, quarta };
+})();
