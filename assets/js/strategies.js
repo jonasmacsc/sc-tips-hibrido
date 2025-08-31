@@ -1,93 +1,42 @@
-(function(){
-  const { log, play } = window.SC_UTILS;
-  const BASE=[2,12,22,32], PROT=[0];
-  const state={active:false,ttlSpins:0,greens:0,reds:0,lastOutcome:'-'};
-  const terminal = n => n%10;
+<!-- Estratégias + Logs -->
+<div class="row" style="margin-top:12px">
+  <!-- Elite 2X -->
+  <div class="card" style="flex:1">
+    <h3>🎯 Estratégia — Elite 2X</h3>
+    <div id="strat-elite2x" class="kpi">
+      <div class="item"><div class="t">Ativa</div><div class="v" data-f="active">OFF</div></div>
+      <div class="item"><div class="t">TTL Spins</div><div class="v" data-f="ttl">0</div></div>
+      <div class="item"><div class="t">Greens</div><div class="v" data-f="greens">0</div></div>
+      <div class="item"><div class="t">Reds</div><div class="v" data-f="reds">0</div></div>
+      <div class="item"><div class="t">Último</div><div class="v" data-f="last">-</div></div>
+    </div>
+    <div style="margin-top:10px">
+      <strong>Números (base + proteção)</strong>
+      <div class="badge" style="margin-top:6px" data-f="nums">2, 12, 22, 32, 0</div>
+      <div class="muted" style="margin-top:6px">Gatilho: número com terminal 4 ou 5. Janela de 3 giros.</div>
+    </div>
+  </div>
 
-  function uiRender(){
-    const box=document.getElementById('strat-elite2x'); if(!box) return;
-    box.querySelector('[data-f=active]').textContent=state.active?'ON':'OFF';
-    box.querySelector('[data-f=ttl]').textContent=state.ttlSpins;
-    box.querySelector('[data-f=greens]').textContent=state.greens;
-    box.querySelector('[data-f=reds]').textContent=state.reds;
-    box.querySelector('[data-f=last]').textContent=state.lastOutcome;
-    box.querySelector('[data-f=nums]').textContent=[...BASE,...PROT].join(', ');
-  }
-  function resetWindow(){ state.active=false; state.ttlSpins=0; state.lastOutcome='-'; uiRender(); }
+  <!-- Quarta Dimensão -->
+  <div class="card" style="flex:1">
+    <h3>🎯 Estratégia — Quarta Dimensão</h3>
+    <div id="strat-quarta" class="kpi">
+      <div class="item"><div class="t">Ativa</div><div class="v" data-f="active">OFF</div></div>
+      <div class="item"><div class="t">TTL Spins</div><div class="v" data-f="ttl">0</div></div>
+      <div class="item"><div class="t">Greens</div><div class="v" data-f="greens">0</div></div>
+      <div class="item"><div class="t">Reds</div><div class="v" data-f="reds">0</div></div>
+      <div class="item"><div class="t">Último</div><div class="v" data-f="last">-</div></div>
+    </div>
+    <div style="margin-top:10px">
+      <strong>Números (base + proteção)</strong>
+      <div class="badge" style="margin-top:6px" data-f="nums">4, 14, 24, 34, 0</div>
+      <div class="muted" style="margin-top:6px">Gatilho: número com terminal 1 ou 3. Janela de 3 giros.</div>
+    </div>
+  </div>
 
-  function onSpin(number){
-    if(terminal(number)===4||terminal(number)===5){ state.active=true; state.ttlSpins=3; play('sndAlert'); log('[Elite2X] Gatilho'); }
-    if(state.active){
-      if(BASE.includes(number)||PROT.includes(number)){ state.greens++; state.lastOutcome='GREEN'; play('sndGreen'); resetWindow();}
-      else{ state.ttlSpins--; if(state.ttlSpins<=0){ state.reds++; state.lastOutcome='RED'; play('sndRed'); resetWindow(); } }
-    }
-    uiRender();
-  }
-  window.SC_STRATS=window.SC_STRATS||{}; window.SC_STRATS.elite2x={onSpin};
-})();
-/* === Estratégia: Quarta Dimensão ===
-   Gatilho: terminal 1 ou 3
-   Base: 4, 14, 24, 34 | Proteção: 0
-   Janela: 3 giros
-*/
-(function(){
-  const { log, play } = window.SC_UTILS;
-  const BASE=[4,14,24,34], PROT=[0];
-
-  const state={ active:false, ttlSpins:0, greens:0, reds:0, lastOutcome:'-' };
-  const terminal = n => (typeof n==='number') ? (n % 10) : null;
-
-  function uiRender(){
-    const box=document.getElementById('strat-q4d'); if(!box) return;
-    box.querySelector('[data-q4d="active"]').textContent = state.active ? 'ON' : 'OFF';
-    box.querySelector('[data-q4d="ttl"]').textContent    = String(state.ttlSpins);
-    box.querySelector('[data-q4d="greens"]').textContent = String(state.greens);
-    box.querySelector('[data-q4d="reds"]').textContent   = String(state.reds);
-    box.querySelector('[data-q4d="last"]').textContent   = state.lastOutcome;
-    box.querySelector('[data-q4d="nums"]').textContent   = [...BASE,...PROT].join(', ');
-  }
-
-  function resetWindow(){
-    state.active=false;
-    state.ttlSpins=0;
-    state.lastOutcome='-';
-    uiRender();
-  }
-
-  function onSpin(number){
-    // Gatilho: terminal 1 ou 3 → abre janela de 3 giros
-    const t = terminal(number);
-    if (t===1 || t===3){
-      state.active = true;
-      state.ttlSpins = 3;
-      play('sndAlert');
-      log('[QuartaDimensao] Gatilho (terminal', t, ')');
-    }
-
-    if (state.active){
-      if (BASE.includes(number) || PROT.includes(number)){
-        state.greens++;
-        state.lastOutcome='GREEN';
-        play('sndGreen');
-        log('[QuartaDimensao] GREEN no número', number);
-        resetWindow();
-      } else {
-        state.ttlSpins--;
-        if (state.ttlSpins<=0){
-          state.reds++;
-          state.lastOutcome='RED';
-          play('sndRed');
-          log('[QuartaDimensao] RED — terminou a janela sem acerto');
-          resetWindow();
-        } else {
-          log('[QuartaDimensao] Aguardando... TTL:', state.ttlSpins);
-        }
-      }
-    }
-
-    uiRender();
-  }
-
-  window.SC_STRATS = window.SC_STRATS || {};
-  window.SC_STRATS.q4d = { onSpin };
-})();
+  <!-- Logs -->
+  <div class="card" style="flex:1">
+    <h3>📜 Logs</h3>
+    <div class="log" id="log"></div>
+  </div>
+</div>
