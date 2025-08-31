@@ -1,36 +1,25 @@
-(function(){
-  const { log, setText, fmtTime, prependHistory, play } = window.SC_UTILS;
-  let process = true;
-
-  function onTick(data){
-    if(!process) return;
-    const { number, platform, dealer, at } = data;
-    if (typeof number !== 'number') return;
-    setText('lastNumber', String(number));
-    setText('dealer', dealer || '–');
-    setText('platform', platform || '–');
-    setText('updated', fmtTime(at || Date.now()));
-    prependHistory(number);
-    play('sndClick');
-    log('[ROULETTE]', data);
-  }
-  function setProcessing(v){ process = !!v; }
-
-  window.addEventListener('SC_LIVE_UPDATE', (e)=> onTick(e.detail));
-  try { new BroadcastChannel('sc-live').addEventListener('message', (e)=> onTick(e.data)); }catch(e){}
-  window.SC_ROULETTE = { onTick, setProcessing };
-})();
-
 // Estratégias no fluxo
 (function(){
   function onSpinForStrategies(n){
-    if (window.SC_STRATS && window.SC_STRATS.elite2x){
-      window.SC_STRATS.elite2x.onSpin(n);
-    }
+    try{
+      if (window.SC_STRATS){
+        window.SC_STRATS.elite2x?.onSpin(n);
+        window.SC_STRATS.quarta?.onSpin(n);
+
+        // Exemplo: mandar sugestão quando houver janela ativa (descomentando abaixo)
+        // const sug1 = window.SC_STRATS.elite2x?.getSuggestion?.();
+        // const sug2 = window.SC_STRATS.quarta?.getSuggestion?.();
+        // if (sug1) window.SC_TG?.sendTG?.(`🎯 ${sug1.label}: ${sug1.numbers.join(', ')} (prot:${sug1.protection.join(',')})`);
+        // if (sug2) window.SC_TG?.sendTG?.(`🎯 ${sug2.label}: ${sug2.numbers.join(', ')} (prot:${sug2.protection.join(',')})`);
+      }
+    }catch(e){}
   }
+
   const _origOnTick = window.SC_ROULETTE.onTick;
   window.SC_ROULETTE.onTick = function(data){
     _origOnTick.call(window.SC_ROULETTE, data);
-    if (typeof data?.number === 'number') onSpinForStrategies(data.number);
+    if (typeof data?.number === 'number'){
+      onSpinForStrategies(data.number);
+    }
   };
 })();
