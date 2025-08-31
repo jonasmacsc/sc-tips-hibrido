@@ -18,3 +18,18 @@
     log('App pronto.');
   });
 })();
+
+// Estratégias no fluxo
+(function(){
+  function onSpinForStrategies(n){
+    if (window.SC_STRATS){
+      if (window.SC_STRATS.elite2x) window.SC_STRATS.elite2x.onSpin(n);
+      if (window.SC_STRATS.q4d)     window.SC_STRATS.q4d.onSpin(n);   // ← NOVA LINHA
+    }
+  }
+  const _origOnTick = window.SC_ROULETTE.onTick;
+  window.SC_ROULETTE.onTick = function(data){
+    _origOnTick.call(window.SC_ROULETTE, data);
+    if (typeof data?.number === 'number') onSpinForStrategies(data.number);
+  };
+})();
