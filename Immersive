@@ -1,0 +1,51 @@
+<div id="sc-immersive" style="font:14px/1.3 Inter,system-ui; color:#eee; background:#111; border:1px solid #2b3a55; border-radius:12px; padding:12px; max-width:480px">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <strong style="font-size:16px">Immersive Roulette • Ao vivo</strong>
+    <span id="sc-status" style="font-size:12px;opacity:.8">conectando…</span>
+  </div>
+  <ol id="sc-list" style="margin:0;padding-left:20px;max-height:260px;overflow:auto"></ol>
+</div>
+
+<script>
+(function(){
+  const BASE = "https://SEU-BACKEND.onrender.com"; // troque pela URL do backend
+  const list = document.getElementById("sc-list");
+  const statusEl = document.getElementById("sc-status");
+
+  function li(item){
+    const i = document.createElement("li");
+    const d = item.data || {};
+    const o = (d.result||{}).outcome || {};
+    const when = d.settledAt || d.startedAt || "";
+    i.textContent = `#${o.number} • ${o.color} • ${o.type} • ${new Date(when).toLocaleString()}`;
+    return i;
+  }
+
+  function addTop(item){
+    list.insertBefore(li(item), list.firstChild);
+    // mantém tamanho
+    const MAX = 50;
+    while(list.children.length > MAX) list.removeChild(list.lastChild);
+  }
+
+  // snapshot inicial via fetch (fallback)
+  fetch(`${BASE}/api/immersive/recent?limit=20`).then(r=>r.json()).then(j=>{
+    (j.items||[]).forEach(x=>addTop(x));
+  });
+
+  // SSE
+  const es = new EventSource(`${BASE}/stream/immersive`);
+  es.onopen = ()=> statusEl.textContent = "conectado";
+  es.onerror = ()=> statusEl.textContent = "reconectando…";
+  es.onmessage = (ev)=>{
+    try{
+      const msg = JSON.parse(ev.data);
+      if(msg.type === "snapshot"){
+        (msg.items||[]).forEach(x=>addTop(x));
+      } else if(msg.type === "append"){
+        addTop(msg.item);
+      }
+    }catch(e){}
+  };
+})();
+</script>
